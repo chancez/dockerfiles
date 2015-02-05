@@ -1,16 +1,15 @@
 [hekad]
 maxprocs = 4
-share_dir = "/heka/build/heka/share/heka"
 
 # Heka dashboard for internal metrics and time series graphs
 [Dashboard]
 type = "DashboardOutput"
-address = ":4352"
+address = "0.0.0.0:4352"
 ticker_interval = 1
 
 [CounterFilter]
-ticker_interval = 1
 message_matcher = 'Type != "heka.counter-output"'
+ticker_interval = 1
 
 [PayloadEncoder]
 
@@ -18,23 +17,32 @@ message_matcher = 'Type != "heka.counter-output"'
 message_matcher = 'Type == "heka.counter-output"'
 encoder = "PayloadEncoder"
 
+[json_decoder]
+type = "SandboxDecoder"
+filename = "lua_decoders/json.lua"
+    [json_decoder.config]
+    type = "journald.json"
+
 [HttpListenInput]
 address = "0.0.0.0:8888"
-unescape_body = false
-
-[JournaldFilter]
-type = "JournaldJSONFilter"
-message_matcher = 'Type == "heka.httpdata.request"'
+splitter = "TokenSplitter"
+decoder = "json_decoder"
+synchronous_decode = false
 
 [ESJsonEncoder]
-index = "journald"
+index = "journald-%{2006.01.02}"
+es_index_from_timestamp = true
 type_name = "syslog"
 id = "%{__CURSOR}"
 fields = ["Timestamp", "Fields"]
 
 [ElasticSearchOutput]
-server = "http://%ENV[ES_SERVER]:9200"
+server = "%ENV[ES_SERVER]"
 message_matcher = "Type == 'journald.json'"
 encoder = "ESJsonEncoder"
-flush_interval = 5
-
+connect_timeout = %ENV[ES_CONNECT_TIMEOUT]
+use_buffering = %ENV[ES_USE_BUFFERING]
+queue_max_buffer_size = %ENV[ES_MAX_BUFFER_SIZE]
+queue_full_action = "%ENV[ES_BUFFER_FULL_ACTION]"
+flush_count = %ENV[ES_FLUSH_COUNT]
+flush_interval = %ENV[ES_FLUSH_INTERVAL]

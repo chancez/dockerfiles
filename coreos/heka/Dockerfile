@@ -1,5 +1,4 @@
-FROM mozilla/heka
+FROM ecnahc515/heka:0.9.0
 
-RUN cd build && make install
 ADD hekad.toml /etc/hekad.toml
-ENTRYPOINT ["hekad", "-config", "/etc/hekad.toml"]
+ENTRYPOINT ["hekad"]
