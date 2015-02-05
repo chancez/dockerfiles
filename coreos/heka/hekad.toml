@@ -1,0 +1,40 @@
+[hekad]
+maxprocs = 4
+share_dir = "/heka/build/heka/share/heka"
+
+# Heka dashboard for internal metrics and time series graphs
+[Dashboard]
+type = "DashboardOutput"
+address = ":4352"
+ticker_interval = 1
+
+[CounterFilter]
+ticker_interval = 1
+message_matcher = 'Type != "heka.counter-output"'
+
+[PayloadEncoder]
+
+[LogOutput]
+message_matcher = 'Type == "heka.counter-output"'
+encoder = "PayloadEncoder"
+
+[HttpListenInput]
+address = "0.0.0.0:8888"
+unescape_body = false
+
+[JournaldFilter]
+type = "JournaldJSONFilter"
+message_matcher = 'Type == "heka.httpdata.request"'
+
+[ESJsonEncoder]
+index = "journald"
+type_name = "syslog"
+id = "%{__CURSOR}"
+fields = ["Timestamp", "Fields"]
+
+[ElasticSearchOutput]
+server = "http://%ENV[ES_SERVER]:9200"
+message_matcher = "Type == 'journald.json'"
+encoder = "ESJsonEncoder"
+flush_interval = 5
+

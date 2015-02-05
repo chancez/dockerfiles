@@ -1,0 +1,16 @@
+{
+    "syslog_template" : {
+        "template": "journald*",
+        "mappings": {
+            "syslog": {
+                "_id": {
+                    "path": "__CURSOR"
+                },
+                "_timestamp": {
+                    "enabled": true,
+                    "path": "__REALTIME_TIMESTAMP"
+                }
+            }
+        }
+    }
+}
